@@ -1,0 +1,50 @@
+name: Code Review AI
+
+on:
+  pull_request:
+    branches:
+      - main
+    types: [opened, synchronize, reopened]
+
+jobs:
+  analyze_code:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: 18
+
+      - name: Install dependencies
+        run: npm install eslint
+
+      - name: Run ESLint
+        run: npx eslint . --format json --output-file eslint-results.json || true
+
+      - name: Analyze code with OpenAI
+        run: |
+          echo "Analyzing code with OpenAI..."
+          curl -X POST "https://api.openai.com/v1/completions" \
+            -H "Content-Type: application/json" \
+            -H "Authorization: Bearer ${{ secrets.OPENAI_API_KEY }}" \
+            -d '{
+              "model": "gpt-4",
+              "messages": [
+                {"role": "system", "content": "Tu es un relecteur de code qui vérifie les bonnes pratiques de programmation."},
+                {"role": "user", "content": "Analyse ce code : "},
+                {"role": "user", "content": "'"$(cat eslint-results.json)"'"}
+              ]
+            }' > ai_review.json
+
+      - name: Check AI results
+        run: |
+          if grep -q "problems" ai_review.json; then
+            echo "Code quality issues found, blocking merge."
+            exit 1
+          else
+            echo "Code is good, PR can be merged."
+          fi
