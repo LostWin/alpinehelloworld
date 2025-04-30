@@ -12,3 +12,5 @@ Voici les instructions les plus courantes utilisées dans un fichier Dockerfile 
 10. VOLUME : Spécifie un répertoire qui doit être monté comme un volume dans le conteneur.
 11. WORKDIR : Spécifie le répertoire de travail pour les instructions suivantes.
 12. USER : Spécifie l'utilisateur qui doit être utilisé pour exécuter les instructions suivantes.
+
+Kissingef
